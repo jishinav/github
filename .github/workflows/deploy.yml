@@ -1,0 +1,24 @@
+name: 🚀 TILEFIN Auto Deploy to cPanel
+
+on:
+  push:
+    branches:
+      - main  # or your deployment branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔐 Generate Webhook Signature
+        id: sign
+        run: |
+          payload='{}'
+          signature=$(echo -n "$payload" | openssl dgst -sha1 -hmac "${{ secrets.CPANEL_SECRET }}" | sed 's/^.* //')
+          echo "signature=sha1:$signature" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Trigger cPanel Webhook
+        run: |
+          curl -X POST http://github.tilefin.com/deploy.php \
+          -H "X-Hub-Signature: ${{ steps.sign.outputs.signature }}" \
+          -d '{}'
